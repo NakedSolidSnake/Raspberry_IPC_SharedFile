@@ -9,7 +9,9 @@
 
 #define FILENAME "/tmp/data.dat"
 
-static Button_t button7 = {
+static void create_file(void);
+
+static Button_t button = {
     .gpio.pin = 7,
     .gpio.eMode = eModeInput,
     .ePullMode = ePullModePullUp,
@@ -24,7 +26,9 @@ int main(int argc, char const *argv[])
     int fd;
     int state = 0;
 
-    if (Button_init(&button7))
+    create_file();
+
+    if (Button_init(&button))
         return EXIT_FAILURE;
 
     while (1)
@@ -32,10 +36,10 @@ int main(int argc, char const *argv[])
 
         while (1)
         {
-            if (!Button_read(&button7))
+            if (!Button_read(&button))
             {
                 usleep(_1ms * 40);
-                while (!Button_read(&button7))
+                while (!Button_read(&button))
                     ;
                 usleep(_1ms * 40);
                 state ^= 0x01;
@@ -47,7 +51,7 @@ int main(int argc, char const *argv[])
             }
         }
 
-        if ((fd = open(FILENAME, O_RDWR | O_CREAT, 0666)) < 0)
+        if ((fd = open(FILENAME, O_RDWR, 0666)) < 0)
             continue;
 
         lock.l_type = F_WRLCK;
@@ -71,4 +75,14 @@ int main(int argc, char const *argv[])
     }
 
     return 0;
+}
+
+static void create_file(void)
+{
+    int fd;
+    fd = open(FILENAME, O_RDWR | O_CREAT, 0666);
+    if(fd < 0)
+        abort();
+    write(fd, "0", 1);
+    close(fd);
 }
