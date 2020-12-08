@@ -7,8 +7,9 @@ No artigo anterior foi apresentado os _system calls_, _fork_ e _exec_, dessa for
 
 _Shared File_ é o mecanismo IPC mais básico, que consiste simplesmente abrir um arquivo e escrever nele, para o caso onde deseja-se inserir informação, e para consumir essa informação se realiza a leitura do mesmo. A figura demonstra esse procedimento.
 
-![sharedfile](images/sharedfile.png)
-
+<p align="center">
+    <img src="images/sharedfile.png">
+</p>
 
 Na figura é possível observar a comunicação entre dois processos distintos, sendo um o Produtor(_Button_), e o outro o Consumidor(_LED_).
 Para esse cenário o Produtor irá inserir no arquivo compartilhado a informação que o Consumidor deverá assumir, ou seja, o processo _Button_ irá alternar o estado de uma variável interna entre os estados 0 e 1, onde 0 representa o LED desligado, e o 1 representa o LED ligado. A cada vez que o botão for pressionado, o estado contido no arquivo será alternado.
