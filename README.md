@@ -303,7 +303,7 @@ close(fd);
 usleep(100* _1ms);
 ```
 
-A listagem completa dos três programas pode ser encontrada na pasta src.
+A listagem completa dos três programas pode ser encontrada na pasta [src](https://github.com/NakedSolidSnake/Raspberry_IPC_SharedFile/tree/main/src).
 
 # Conclusão
 Apesar de ser uma implementação simples, esse exemplo possui uma alta incidência de concorrência no acesso ao arquivo, tive que inserir alguns atrasos para evitar a  concorrência. O exemplo utilizado nesse artigo, foi criado de forma pura, para utilizar somente esse mecanismo, sem interferência de outro IPC. Esse problema pode ser resolvido em conjunto com outro IPC.
