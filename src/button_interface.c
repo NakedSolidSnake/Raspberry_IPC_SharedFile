@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <button.h>
+#include <button_interface.h>
 
 #define _1ms 1000
 
@@ -11,14 +11,7 @@
 
 static void create_file(void);
 
-static Button_t button = {
-    .gpio.pin = 7,
-    .gpio.eMode = eModeInput,
-    .ePullMode = ePullModePullUp,
-    .eIntEdge = eIntEdgeFalling,
-    .cb = NULL};
-
-int main(int argc, char const *argv[])
+bool Button_Run(void *object, Button_Interface *button)
 {
     char buffer[2];
     struct flock lock;
@@ -28,26 +21,20 @@ int main(int argc, char const *argv[])
 
     create_file();
 
-    if (Button_init(&button))
+    if (button->Init(object) == false)
         return EXIT_FAILURE;
 
-    while (1)
+    while (true)
     {
 
-        while (1)
+        while(true)
         {
-            if (!Button_read(&button))
-            {
-                usleep(_1ms * 40);
-                while (!Button_read(&button))
-                    ;
-                usleep(_1ms * 40);
+            if(!button->Read(object)){
+                usleep(_1ms * 100);
                 state ^= 0x01;
                 break;
-            }
-            else
-            {
-                usleep(_1ms);
+            }else{
+                usleep( _1ms );
             }
         }
 
@@ -59,6 +46,7 @@ int main(int argc, char const *argv[])
         lock.l_start = 0;
         lock.l_len = 0;
         lock.l_pid = getpid();
+        
         while (fcntl(fd, F_SETLK, &lock) < 0)
             usleep(_1ms);
 
@@ -74,7 +62,7 @@ int main(int argc, char const *argv[])
         usleep(100 * _1ms);
     }
 
-    return 0;
+    return false;
 }
 
 static void create_file(void)

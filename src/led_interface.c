@@ -3,18 +3,13 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <led.h>
+#include <led_interface.h>
 
 #define _1ms 1000
 #define FILENAME "/tmp/data.dat"
 
-static LED_t led =
-    {
-        .gpio.pin = 0,
-        .gpio.eMode = eModeOutput
-    };
 
-int main(int argc, char const *argv[])
+bool LED_Run(void *object, LED_Interface *led)
 {
     char buffer[2];
     struct flock lock;
@@ -23,7 +18,7 @@ int main(int argc, char const *argv[])
     int state_old = 0;
     int state_curr;
 
-    if (LED_init(&led))
+    if (led->Init(object) == false)
         return EXIT_FAILURE;
 
     while (1)
@@ -54,7 +49,7 @@ int main(int argc, char const *argv[])
 
         state_curr = atoi(buffer);
         if(state_curr != state_old){
-            LED_set(&led, (eState_t)state_curr);
+            led->Set(object, (uint8_t)state_curr);
             state_old = state_curr;
         }
 
@@ -66,5 +61,5 @@ int main(int argc, char const *argv[])
         usleep(100 * _1ms);
     }
 
-    return 0;
+    return false;
 }
