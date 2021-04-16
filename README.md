@@ -1,10 +1,10 @@
 ![Shared](https://miro.medium.com/max/3202/1*eqPvgEZA5iH0AXOnXSbO7g.png)
-# Introdução
-Antes de prosseguirmos recomendo a leitura dos README's [lib hardware](https://github.com/NakedSolidSnake/Raspberry_lib_hardware), [fork_exec](https://github.com/NakedSolidSnake/Raspberry_fork_exec).
-No artigo anterior foi apresentado os _system calls_, _fork_ e _exec_, dessa forma é possível chamar outra aplicação através dessa combinação, essa técnica vai ser usada em quase todos os próximos artigos. Nesse artigo será apresentado a técnica conhecida como _shared file_, vamos lá!
+
+Antes de seguir esse artigo é imprescindível a instalação da biblioteca [hardware](https://github.com/NakedSolidSnake/Raspberry_lib_hardware) caso queria utilizar o hardware da Raspberry.
 
 # _Shared File_
 
+## Introdução
 _Shared File_ é o mecanismo IPC mais básico, que consiste simplesmente abrir um arquivo e escrever nele, para o caso onde deseja-se inserir informação, e para consumir essa informação se realiza a leitura do mesmo. A figura demonstra esse procedimento.
 
 <p align="center">
@@ -12,7 +12,7 @@ _Shared File_ é o mecanismo IPC mais básico, que consiste simplesmente abrir u
 </p>
 
 Na figura é possível observar a comunicação entre dois processos distintos, sendo um o Produtor(_Button_), e o outro o Consumidor(_LED_).
-Para esse cenário o Produtor irá inserir no arquivo compartilhado a informação que o Consumidor deverá assumir, ou seja, o processo _Button_ irá alternar o estado de uma variável interna entre os estados 0 e 1, onde 0 representa o LED desligado, e o 1 representa o LED ligado. A cada vez que o botão for pressionado, o estado contido no arquivo será alternado.
+Para esse cenário o Produtor irá inserir no arquivo a informação que o Consumidor irá consumir, ou seja, o processo _Button_ irá alternar o estado de uma variável interna entre os estados 0 e 1, onde 0 representa o LED desligado, e o 1 representa o LED ligado. A cada vez que o botão for pressionado, o estado contido no arquivo será alternado.
 
 O controle de acesso desse arquivo é necessário a utilização de uma estrutura chamada de _struct flock_ que funciona como uma espécie de trava para o arquivo compartilhado, e através da função _fcntl_, essa função é responsável por aplicar operações em um arquivo, para a utilização dessa função é necessário incluir os seguintes _includes_:
 
@@ -29,7 +29,7 @@ para mais informações sobre essa estrutura execute no terminal o comando:
 $ man 2 fcntl
 ```
 
-# A aplicação
+## Implementação
 Para exemplificar esse _IPC_ vou utilizar três programas, sendo o *launch_processes* que tem a função de lançar os processos de *led_process* e *button_process*, sendo um o Consumidor(*led_process) e o outro o Produtor(*button_process*).
 
 ## *launch_processes*
