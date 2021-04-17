@@ -155,28 +155,9 @@ usleep(100 * _1ms);
 
 ## *led_interface*
 
-Para implementar o *led_process* incluimos os _headers_ necessários.
-```c
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <led.h>
-```
-
 Definimos o nome do arquivo que vai recuperado o estado gerado pelo botão.
 ```c
 #define FILENAME "/tmp/data.dat"
-```
-
-Criamos e preenchemos o descritor referente ao pino que está conectado o LED. Nessa configuração o LED está conectado no pino 0, configurado como saída.
-```c
-static LED_t led =
-    {
-        .gpio.pin = 0,
-        .gpio.eMode = eModeOutput
-    };
 ```
 
 Aqui é criado uma variável para a recuperação do dado que foi armazenado no arquivo.
@@ -196,9 +177,9 @@ int state_old = 0;
 int state_curr;
 ```
 
-Neste trecho inicializamos o LED com o descritor preenchido anteriormente.
+Neste trecho inicializamos a interface do LED com o descritor preenchido conforme selecionado no momento da compilação.
 ```c
-if (LED_init(&led))
+if (led->Init(object) == false)
     return EXIT_FAILURE;
 ```
 
@@ -208,7 +189,7 @@ if ((fd = open(FILENAME, O_RDONLY)) < 0)
     return EXIT_FAILURE;
 ```
 
-Aqui preenchemos a estrutura com os parâmetros de trava para escrita, onde o arquivo é tipo trancado para escrita, sempre partindo do início do arquivo, e recebe o PID do processo.
+Aqui preenchemos a estrutura com os parâmetros de trava para escrita, onde o arquivo é travado para escrita, sempre partindo do início do arquivo, e passamos o PID do processo.
 ```c
 lock.l_type = F_WRLCK;
 lock.l_whence = SEEK_SET;
@@ -217,13 +198,13 @@ lock.l_len = 0;
 lock.l_pid = getpid();
 ```
 
-Aqui tentando obter o que o arquivo possui como parâmetros de configuração.
+Aqui obtemos as configuração atuais do arquivo, para podermos verificar quais são suas configurações
 ```c
 while (fcntl(fd, F_GETLK, &lock) < 0)
     usleep(_1ms);
 ```
 
-Caso seja diferente de destravado fechamos o arquivo e retornamos para a próxima interação.
+Caso esteja travado, fechamos o descritor e retornamos para o início do processo
 ```c
 if (lock.l_type != F_UNLCK){
     close(fd);
@@ -243,10 +224,11 @@ Lemos o conteúdo do arquivo.
 while (read(fd, &buffer, sizeof(buffer)) > 0);            
 ```
 
-Convertemos o valor lido e verificamos se o valor atual é diferente do valor anterior, caso for diferente aplica o novo estado, se não, então não aplica a modificação.
+Convertemos o valor lido e verificamos se o valor atual é diferente do valor anterior, caso for diferente aplica o novo estado, se não, não aplica a modificação.
 ```c
 state_curr = atoi(buffer);
-if(state_curr != state_old){
+if(state_curr != state_old)
+{
     LED_set(&led, (eState_t)state_curr);
     state_old = state_curr;
 }
@@ -265,7 +247,99 @@ close(fd);
 usleep(100* _1ms);
 ```
 
-A listagem completa dos três programas pode ser encontrada na pasta [src](https://github.com/NakedSolidSnake/Raspberry_IPC_SharedFile/tree/main/src).
+## Compilando, Executando e Matando os processos
+Para compilar e testar o projeto é necessário instalar a biblioteca de [hardware](https://github.com/NakedSolidSnake/Raspberry_lib_hardware) necessária para resolver as dependências de configuração de GPIO da Raspberry Pi.
 
-# Conclusão
-Apesar de ser uma implementação simples, esse exemplo possui uma alta incidência de concorrência no acesso ao arquivo, tive que inserir alguns atrasos para evitar a  concorrência. O exemplo utilizado nesse artigo, foi criado de forma pura, para utilizar somente esse mecanismo, sem interferência de outro IPC. Esse problema pode ser resolvido em conjunto com outro IPC.
+## Compilando
+Para faciliar a execução do exemplo, o exemplo proposto foi criado baseado em uma interface, onde é possível selecionar se usará o hardware da Raspberry Pi 3, ou se a interação com o exemplo vai ser através de input feito por FIFO e o output visualizado através de LOG.
+
+### Clonando o projeto
+Pra obter uma cópia do projeto execute os comandos a seguir:
+
+```bash
+$ git clone https://github.com/NakedSolidSnake/Raspberry_IPC_SharedFile/
+$ cd Raspberry_IPC_Pipe
+$ mkdir build && cd build
+```
+
+### Selecionando o modo
+Para selecionar o modo devemos passar para o cmake uma variável de ambiente chamada de ARCH, e pode-se passar os seguintes valores, PC ou RASPBERRY, para o caso de PC o exemplo terá sua interface preenchida com os sources presentes na pasta src/platform/pc, que permite a interação com o exemplo através de FIFO e LOG, caso seja RASPBERRY usará os GPIO's descritos no [artigo](https://github.com/NakedSolidSnake/Raspberry_lib_hardware#testando-a-instala%C3%A7%C3%A3o-e-as-conex%C3%B5es-de-hardware).
+
+#### Modo PC
+```bash
+$ cmake -DARCH=PC ..
+$ make
+```
+
+#### Modo RASPBERRY
+```bash
+$ cmake -DARCH=RASPBERRY ..
+$ make
+```
+
+## Executando
+Para executar a aplicação execute o processo _*launch_processes*_ para lançar os processos *button_process* e *led_process* que foram determinados de acordo com o modo selecionado.
+
+```bash
+$ cd bin
+$ ./launch_processes
+```
+
+Uma vez executado podemos verificar se os processos estão rodando atráves do comando 
+```bash
+$ ps -ef | grep _process
+```
+
+O output 
+```bash
+pi        4725     1  1 23:53 pts/0    00:00:00 button_process 4
+pi        4726     1  0 23:53 pts/0    00:00:00 led_process 3
+```
+Aqui é possível notar que o button_process possui um argumento com o valor 4, e o led_process possui também um argumento com o valor 3, esses valores representam os descritores gerados pelo _pipe system call_, onde o 4 representa o descritor de escrita e o 3 representa o descritor de leitura.
+
+## Interagindo com o exemplo
+Dependendo do modo de compilação selecionado a interação com o exemplo acontece de forma diferente
+
+### MODO PC
+Para o modo PC, precisamos abrir um terminal e monitorar os LOG's
+```bash
+$ sudo tail -f /var/log/syslog | grep LED
+```
+
+Dessa forma o terminal irá apresentar somente os LOG's referente ao exemplo.
+
+Para simular o botão, o processo em modo PC cria uma FIFO para permitir enviar comandos para a aplicação, dessa forma todas as vezes que for enviado o número 0 irá logar no terminal onde foi configurado para o monitoramento, segue o exemplo
+```bash
+$ echo "0" > /tmp/pipe_file
+```
+
+Output do LOG quando enviado o comando algumas vezez
+```bash
+Apr  3 20:56:19 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: On
+Apr  3 20:56:20 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: Off
+Apr  3 20:56:21 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: On
+Apr  3 20:56:34 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: Off
+Apr  3 20:56:50 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: On
+Apr  3 20:56:51 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: Off
+Apr  3 20:56:51 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: On
+Apr  3 20:56:52 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: Off
+```
+
+### MODO RASPBERRY
+Para o modo RASPBERRY a cada vez que o botão for pressionado irá alternar o estado do LED.
+
+## Matando os processos
+Para matar os processos criados execute o script kill_process.sh
+```bash
+$ cd bin
+$ ./kill_process.sh
+```
+
+## Conclusão
+Apesar de ser uma implementação simples, esse exemplo possui uma alta incidência de concorrência no acesso ao arquivo, para funcionar de forma razoável foi necessário inserir alguns atrasos para evitar(reduzir) a  concorrência. Não é recomendado, pois precisa de outros mecanismos para sincronizar o seu acesso, como signal ou semaphore(que veremos mais adiante), mais a idéia é demonstrar o seu uso na forma pura sem interferência de outro IPC.
+
+## Referência
+* [Link do projeto completo](https://github.com/NakedSolidSnake/Raspberry_IPC_SharedFile)
+* [Mark Mitchell, Jeffrey Oldham, and Alex Samuel - Advanced Linux Programming](https://www.amazon.com.br/Advanced-Linux-Programming-CodeSourcery-LLC/dp/0735710430)
+* [fork, exec e daemon](https://github.com/NakedSolidSnake/Raspberry_fork_exec_daemon)
+* [biblioteca hardware](https://github.com/NakedSolidSnake/Raspberry_lib_hardware)
