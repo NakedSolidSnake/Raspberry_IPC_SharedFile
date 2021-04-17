@@ -5,16 +5,14 @@ Antes de seguir esse artigo é imprescindível a instalação da biblioteca [har
 # _Shared File_
 
 ## Introdução
-_Shared File_ é o mecanismo IPC mais básico, que consiste simplesmente abrir um arquivo e escrever nele, para o caso onde deseja-se inserir informação, e para consumir essa informação se realiza a leitura do mesmo. A figura demonstra esse procedimento.
+_Shared File_ é o mecanismo IPC mais básico, que consiste simplesmente em manipular um arquivo comum com as operações básicas de _open_, _write_, _read_ e _close_, como essas operações é possível inserir informações no arquivo e bem como realizar a leitura dessas informações. Arquivos normalmente são usados para guardar diversos tipos de informações como configurações, logs, anotações entre outros, a figura baixo ajuda a ilustrar a comunicação entre dois processos por meio de uma arquivo.
 
 <p align="center">
     <img src="images/sharedfile.png">
 </p>
 
 Na figura é possível observar a comunicação entre dois processos distintos, sendo um o Produtor(_Button_), e o outro o Consumidor(_LED_).
-Para esse cenário o Produtor irá inserir no arquivo a informação que o Consumidor irá consumir, ou seja, o processo _Button_ irá alternar o estado de uma variável interna entre os estados 0 e 1, onde 0 representa o LED desligado, e o 1 representa o LED ligado. A cada vez que o botão for pressionado, o estado contido no arquivo será alternado.
-
-O controle de acesso desse arquivo é necessário a utilização de uma estrutura chamada de _struct flock_ que funciona como uma espécie de trava para o arquivo compartilhado, e através da função _fcntl_, essa função é responsável por aplicar operações em um arquivo, para a utilização dessa função é necessário incluir os seguintes _includes_:
+Para esse cenário o Produtor inserire no arquivo a informação que o Consumidor irá consumir, porém para que o acesso ao arquivo ocorra de forma sincronizada, faz-se necessário o uso da estrutura  _struct flock_ que funciona como uma espécie de chave para acessar o arquivo, que por meio da função _fcntl_, é possível verificar se o arquivo está com o acesso liberado, para poder manipulá-lo. A seguir podemos ver a _systemcall fcntl_:
 
 ```c
 #include <unistd.h>
@@ -30,19 +28,15 @@ $ man 2 fcntl
 ```
 
 ## Implementação
-Para exemplificar esse _IPC_ vou utilizar três programas, sendo o *launch_processes* que tem a função de lançar os processos de *led_process* e *button_process*, sendo um o Consumidor(*led_process) e o outro o Produtor(*button_process*).
 
-## *launch_processes*
-Esse programa tem a finalidade de clonar e carregar os outros dois programas usando a combinação _fork_ e _exec_.
+Para demonstrar o uso desse IPC, iremos utilizar o modelo Produtor/Consumir, onde o processo responsável por ser o Produtor(_button_process_) vai escrever seu estado interno no arquivo, e o Consumidor(_led_process_) vai ler o estado interno do botão e vai aplicar o estado para si. Aplicação é composta por três executáveis sendo eles:
+* _launch_processes_ - é responsável por lançar os processos _button_process_ e _led_process_ atráves da combinação _fork_ e _exec_
+* _button_interface_ - é reponsável por ler o GPIO em modo de leitura da Raspberry Pi e escrever o estado interno no arquivo
+* _led_interface_ - é reponsável por ler do arquivo o estado interno do botão e aplicar em um GPIO configurado como saída
 
-Para implementar o *launch_processes* incluimos os _headers_ necessários.
-```c
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-```
+### *launch_processes*
 
-Após o _main_ criamos duas variáveis para armazenar o PID do *button_process* e do *led_process*, e mais duas variáveis para armazenar o resultado caso o _exec_ venha a falhar.
+No _main_ criamos duas variáveis para armazenar o PID do *button_process* e do *led_process*, e mais duas variáveis para armazenar o resultado caso o _exec_ venha a falhar.
 ```c
 int pid_button, pid_led;
 int button_status, led_status;
@@ -77,38 +71,13 @@ if(pid_led == 0)
 }
 ```
 
-E termina o *launch_processes* com sucesso.
-```c
-return EXIT_SUCCESS;
-```
+## *button_interface*
 
-## *button_process*
-Esse programa tem a finalidade de alterar o conteúdo do arquivo entre o valores 0 e 1 conforme o botão conectado à Raspberry Pi for pressionado.
+Definimos o nome do arquivo que vai armazenar o estado interno, e uma função de apoio para realizar a criação do arquivo que será usado para compartilhar as informações
 
-Para implementar o *button_process* incluimos os *headers* necessários.
 ```c
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <button.h>
-```
-
-Definimos o nome do arquivo que vai armazenar o estado gerado pelo botão.
-```c
-#define _1ms 1000
 #define FILENAME "/tmp/data.dat"
-```
-
-Criamos e preenchemos o descritor referente ao pino que está conectado o botão. Nessa configuração o botão está conectado no pino 7, configurado como entrada, como _pull up_ habilitado.
-```c
-static Button_t button7 = {
-    .gpio.pin = 7,
-    .gpio.eMode = eModeInput,
-    .ePullMode = ePullModePullUp,
-    .eIntEdge = eIntEdgeFalling,
-    .cb = NULL};
+static void create_file(void);
 ```
 
 Aqui é criado uma variável para a formatação do dado que será armazenado no arquivo.
@@ -127,39 +96,33 @@ int fd;
 int state = 0;
 ```
 
-Neste trecho inicializamos o botão com o descritor preenchido anteriormente.
+Neste trecho inicializamos a interface do botão com o descritor preenchido conforme selecionado no momento da compilação.
 ```c
-if (Button_init(&button7))
+if (button->Init(object) == false)
     return EXIT_FAILURE;
 ```
 
-Aqui reside o _core_ da aplicação, neste fragmento, o programa fica em _polling_ aguardando que o botão seja pressionado, caso não, aguarda 1 ms para não consumir processamento. Se for pressionado realiza algumas validações para realmente efetivar a troca de estado e interrompe o laço *while*.
+Aqui reside o _core_ da aplicação, neste fragmento, o programa fica em _polling_ aguardando que o botão seja pressionado, caso não, aguarda 1 ms para não consumir processamento. Se for pressionado realiza a troca de estado e interrompe o laço *while*.
 ```c
-while (1)
+while(true)
 {
-    if (!Button_read(&button7))
-    {
-        usleep(_1ms * 40);
-        while (!Button_read(&button7))
-            ;
-        usleep(_1ms * 40);
+    if(!button->Read(object)){
+        usleep(_1ms * 100);
         state ^= 0x01;
         break;
-    }
-    else
-    {
-        usleep(_1ms);
+    }else{
+        usleep( _1ms );
     }
 }
 ```
 
-Aqui realizamos a abertura do arquivo, se o mesmo não existir será criado, caso não seja possível criá-lo retorna para o _while_ principal aguardando a próxima ação do botão.
+Aqui é feita a abertura do arquivo
 ```c
-if ((fd = open(FILENAME, O_RDWR | O_CREAT, 0666)) < 0)
+if ((fd = open(FILENAME, O_RDWR, 0666)) < 0)
     continue;
 ```
 
-Com o arquivo criado, setamos as configurações de proteção, nesse caso corresponde à travar para escrita, sempre partindo do início do arquivo, e recebe o PID do processo. Aplicamos a configuração, caso falhe é aguardado 1ms para uma nova tentativa.
+Setamos as configurações de proteção, nesse caso corresponde em travar para escrita, sempre partindo do início do arquivo, e recebe o PID do processo. Aplicamos a configuração, caso falhe é aguardado 1ms para uma nova tentativa.
 ```c
 lock.l_type = F_WRLCK;
 lock.l_whence = SEEK_SET;
@@ -190,8 +153,7 @@ usleep(100 * _1ms);
 ```
 
 
-## *led_process*
-Esse programa tem a finalidade de ler o conteúdo do arquivo e setar o estado do LED conectado à Raspberry Pi, conforme o conteúdo do arquivo. 
+## *led_interface*
 
 Para implementar o *led_process* incluimos os _headers_ necessários.
 ```c
