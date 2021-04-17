@@ -27,7 +27,7 @@ $ man 2 fcntl
 
 ## Implementação
 
-Para demonstrar o uso desse IPC, iremos utilizar o modelo Produtor/Consumir, onde o processo responsável por ser o Produtor(_button_process_) vai escrever seu estado interno no arquivo, e o Consumidor(_led_process_) vai ler o estado interno do botão e vai aplicar o estado para si. Aplicação é composta por três executáveis sendo eles:
+Para demonstrar o uso desse IPC, iremos utilizar o modelo Produtor/Consumidor, onde o processo responsável por ser o Produtor(_button_process_) vai escrever seu estado interno no arquivo, e o Consumidor(_led_process_) vai ler o estado interno do botão e vai aplicar o estado para si. Aplicação é composta por três executáveis sendo eles:
 * _launch_processes_ - é responsável por lançar os processos _button_process_ e _led_process_ atráves da combinação _fork_ e _exec_
 * _button_interface_ - é reponsável por ler o GPIO em modo de leitura da Raspberry Pi e escrever o estado interno no arquivo
 * _led_interface_ - é reponsável por ler do arquivo o estado interno do botão e aplicar em um GPIO configurado como saída
