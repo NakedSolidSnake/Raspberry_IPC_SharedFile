@@ -122,16 +122,9 @@ if (button->Init(object) == false)
 
 Aqui reside o _core_ da aplicação, neste fragmento, o programa fica em _polling_ aguardando que o botão seja pressionado, caso não, aguarda 1 ms para não consumir processamento. Se for pressionado realiza a troca de estado e interrompe o laço *while*.
 ```c
-while(true)
-{
-    if(!button->Read(object)){
-        usleep(_1ms * 100);
-        state ^= 0x01;
-        break;
-    }else{
-        usleep( _1ms );
-    }
-}
+wait_press(object, button);
+        
+state ^= 0x01;
 ```
 
 Aqui é feita a abertura do arquivo
