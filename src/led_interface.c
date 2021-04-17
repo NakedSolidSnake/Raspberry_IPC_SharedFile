@@ -48,7 +48,8 @@ bool LED_Run(void *object, LED_Interface *led)
         while (read(fd, &buffer, sizeof(buffer)) > 0);            
 
         state_curr = atoi(buffer);
-        if(state_curr != state_old){
+        if(state_curr != state_old)
+        {
             led->Set(object, (uint8_t)state_curr);
             state_old = state_curr;
         }

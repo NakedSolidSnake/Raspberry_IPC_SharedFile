@@ -9,7 +9,7 @@
 
 static bool Init(void *object);
 static bool Read(void *object);
-static const char * myfifo = "/tmp/input_fifo";
+static const char * myfifo = "/tmp/shared_file_fifo";
 
 static int fd;
 
