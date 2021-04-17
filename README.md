@@ -293,8 +293,6 @@ O output
 cssouza  16871  3449  0 07:15 pts/4    00:00:00 ./button_process
 cssouza  16872  3449  0 07:15 pts/4    00:00:00 ./led_process
 ```
-Aqui é possível notar que o button_process possui um argumento com o valor 4, e o led_process possui também um argumento com o valor 3, esses valores representam os descritores gerados pelo _pipe system call_, onde o 4 representa o descritor de escrita e o 3 representa o descritor de leitura.
-
 ## Interagindo com o exemplo
 Dependendo do modo de compilação selecionado a interação com o exemplo acontece de forma diferente
 
