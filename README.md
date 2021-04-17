@@ -1,7 +1,5 @@
 ![Shared](https://miro.medium.com/max/3202/1*eqPvgEZA5iH0AXOnXSbO7g.png)
 
-Antes de seguir esse artigo é imprescindível a instalação da biblioteca [hardware](https://github.com/NakedSolidSnake/Raspberry_lib_hardware) caso queria utilizar o hardware da Raspberry.
-
 # _Shared File_
 
 ## Introdução
