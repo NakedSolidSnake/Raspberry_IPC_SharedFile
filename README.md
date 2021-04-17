@@ -2,6 +2,26 @@
 
 # _Shared File_
 
+## Tópicos
+* [Introdução](#introdução)
+* [Implementação](#implementação)
+* [launch_processes](#launch_processes)
+* [button_interface](#button_interface)
+* [led_interface](#led_interface)
+* [Compilando, Executando e Matando os processos](#compilando-executando-e-matando-os-processos)
+* [Compilando](#compilando)
+* [Clonando o projeto](#clonando-o-projeto)
+* [Selecionando o modo](#selecionando-o-modo)
+* [Modo PC](#modo-pc)
+* [Modo RASPBERRY](#modo-raspberry)
+* [Executando](#executando)
+* [Interagindo com o exemplo](#interagindo-com-o-exemplo)
+* [MODO PC](#modo-pc-1)
+* [MODO RASPBERRY](#modo-raspberry-1)
+* [Matando os processos](#matando-os-processos)
+* [Conclusão](#conclusão)
+* [Referência](#referência)
+
 ## Introdução
 _Shared File_ é o mecanismo IPC mais básico, que consiste simplesmente em manipular um arquivo comum com as operações básicas de _open_, _write_, _read_ e _close_, com essas operações é possível inserir informações no arquivo e bem como realizar a leitura delas. Arquivos normalmente são usados para guardar diversos tipos de informação como configurações, logs, anotações entre outros, a figura baixo ajuda a ilustrar a comunicação entre dois processos por meio de uma arquivo.
 
