@@ -201,10 +201,13 @@ if (led->Init(object) == false)
     return EXIT_FAILURE;
 ```
 
-Aqui realizamos a abertura do arquivo, em modo de leitura, caso não seja possível obter o descritor, retorna e aplicação se encerra.
+Aqui realizamos a abertura do arquivo, em modo de leitura, caso não seja possível obter o descritor, aguarda 1s e realiza uma nova tentativa.
 ```c
 if ((fd = open(FILENAME, O_RDONLY)) < 0)
-    return EXIT_FAILURE;
+{
+    usleep(_1ms * 1000);
+    continue;
+}
 ```
 
 Aqui preenchemos a estrutura com os parâmetros de trava para escrita, onde o arquivo é travado para escrita, sempre partindo do início do arquivo, e passamos o PID do processo.
