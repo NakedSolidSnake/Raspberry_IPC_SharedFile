@@ -10,7 +10,7 @@ _Shared File_ é o mecanismo IPC mais básico, que consiste simplesmente em mani
 </p>
 
 Na figura é possível observar a comunicação entre dois processos distintos, sendo um o Produtor(_Button_), e o outro o Consumidor(_LED_).
-Para esse cenário o Produtor inserire no arquivo a informação que o Consumidor irá consumir, porém para que o acesso ao arquivo ocorra de forma sincronizada, faz-se necessário o uso da estrutura  _struct flock_ que funciona como uma espécie de chave para acessar o arquivo, que por meio da função _fcntl_, é possível verificar se o arquivo está com o acesso liberado, para poder manipulá-lo. A seguir podemos ver a _systemcall fcntl_:
+Para esse cenário o Produtor insere no arquivo a informação que o Consumidor irá consumir, porém para que o acesso ao arquivo ocorra de forma sincronizada, faz-se necessário o uso da estrutura  _struct flock_ que funciona como uma espécie de chave para acessar o arquivo, que por meio da função _fcntl_, é possível verificar se o arquivo está com o acesso liberado, para poder manipulá-lo. A seguir podemos ver a _systemcall fcntl_:
 
 ```c
 #include <unistd.h>
