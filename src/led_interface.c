@@ -21,10 +21,13 @@ bool LED_Run(void *object, LED_Interface *led)
     if (led->Init(object) == false)
         return EXIT_FAILURE;
 
-    while (1)
+    while (true)
     {
         if ((fd = open(FILENAME, O_RDONLY)) < 0)
-            return EXIT_FAILURE;
+        {
+            usleep(_1ms * 1000);
+            continue;
+        }
 
         lock.l_type = F_WRLCK;
         lock.l_whence = SEEK_SET;
