@@ -3,7 +3,7 @@
 # _Shared File_
 
 ## Introdução
-_Shared File_ é o mecanismo IPC mais básico, que consiste simplesmente em manipular um arquivo comum com as operações básicas de _open_, _write_, _read_ e _close_, com essas operações é possível inserir informações no arquivo e bem como realizar a leitura dessas informações. Arquivos normalmente são usados para guardar diversos tipos de informações como configurações, logs, anotações entre outros, a figura baixo ajuda a ilustrar a comunicação entre dois processos por meio de uma arquivo.
+_Shared File_ é o mecanismo IPC mais básico, que consiste simplesmente em manipular um arquivo comum com as operações básicas de _open_, _write_, _read_ e _close_, com essas operações é possível inserir informações no arquivo e bem como realizar a leitura delas. Arquivos normalmente são usados para guardar diversos tipos de informações como configurações, logs, anotações entre outros, a figura baixo ajuda a ilustrar a comunicação entre dois processos por meio de uma arquivo.
 
 <p align="center">
     <img src="images/sharedfile.png">
