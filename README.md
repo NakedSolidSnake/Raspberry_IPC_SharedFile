@@ -257,8 +257,8 @@ Para faciliar a execução do exemplo, o exemplo proposto foi criado baseado em 
 Pra obter uma cópia do projeto execute os comandos a seguir:
 
 ```bash
-$ git clone https://github.com/NakedSolidSnake/Raspberry_IPC_SharedFile/
-$ cd Raspberry_IPC_Pipe
+$ git clone https://github.com/NakedSolidSnake/Raspberry_IPC_SharedFile
+$ cd Raspberry_IPC_SharedFile
 $ mkdir build && cd build
 ```
 
@@ -292,8 +292,8 @@ $ ps -ef | grep _process
 
 O output 
 ```bash
-pi        4725     1  1 23:53 pts/0    00:00:00 button_process 4
-pi        4726     1  0 23:53 pts/0    00:00:00 led_process 3
+cssouza  16871  3449  0 07:15 pts/4    00:00:00 ./button_process
+cssouza  16872  3449  0 07:15 pts/4    00:00:00 ./led_process
 ```
 Aqui é possível notar que o button_process possui um argumento com o valor 4, e o led_process possui também um argumento com o valor 3, esses valores representam os descritores gerados pelo _pipe system call_, onde o 4 representa o descritor de escrita e o 3 representa o descritor de leitura.
 
@@ -310,19 +310,19 @@ Dessa forma o terminal irá apresentar somente os LOG's referente ao exemplo.
 
 Para simular o botão, o processo em modo PC cria uma FIFO para permitir enviar comandos para a aplicação, dessa forma todas as vezes que for enviado o número 0 irá logar no terminal onde foi configurado para o monitoramento, segue o exemplo
 ```bash
-$ echo "0" > /tmp/pipe_file
+$ echo "0" > /tmp/shared_file_fifo
 ```
 
 Output do LOG quando enviado o comando algumas vezez
 ```bash
-Apr  3 20:56:19 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: On
-Apr  3 20:56:20 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: Off
-Apr  3 20:56:21 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: On
-Apr  3 20:56:34 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: Off
-Apr  3 20:56:50 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: On
-Apr  3 20:56:51 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: Off
-Apr  3 20:56:51 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: On
-Apr  3 20:56:52 cssouza-Latitude-5490 LED PIPE[22810]: LED Status: Off
+Apr 17 07:15:22 cssouza-Latitude-5490 LED SHARED FILE[16872]: LED Status: On
+Apr 17 07:15:23 cssouza-Latitude-5490 LED SHARED FILE[16872]: LED Status: Off
+Apr 17 07:15:24 cssouza-Latitude-5490 LED SHARED FILE[16872]: LED Status: On
+Apr 17 07:15:24 cssouza-Latitude-5490 LED SHARED FILE[16872]: LED Status: Off
+Apr 17 07:15:25 cssouza-Latitude-5490 LED SHARED FILE[16872]: LED Status: On
+Apr 17 07:15:25 cssouza-Latitude-5490 LED SHARED FILE[16872]: LED Status: Off
+Apr 17 07:15:26 cssouza-Latitude-5490 LED SHARED FILE[16872]: LED Status: On
+Apr 17 07:15:26 cssouza-Latitude-5490 LED SHARED FILE[16872]: LED Status: Off
 ```
 
 ### MODO RASPBERRY
